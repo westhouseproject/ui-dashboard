@@ -47,7 +47,7 @@ var energyChart, gasChart;
 $(function() {
     // If we want production data, then the time series is solar_pv_power
 	
-    var client = new DBMSClient('admin', 'blahblah', 'http://142.58.183.207:4406');
+    var client = new DBMSClient('admin', 'blahblah', 'http://142.58.183.207:4427');
     console.log("loading data...");
     client.getData('energy_consumption', { interval:'1h', from:'2d' }, function (err, data) { 
         if (err) { 
