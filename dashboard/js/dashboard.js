@@ -53,7 +53,6 @@ $(function() {
         if (err) { 
             return alert('Data Access Error'); 
         }    
-
         getDayData(data);
 
         client.getData('energy_consumption', { from:'1mo', groupbyhour:'mean' }, function (err, data) { 
@@ -73,52 +72,89 @@ $(function() {
                         return alert('Data Access Error'); 
                     }    
                     getAveData(data, 'all');
-                    
 
-                    console.log(energyConsumedToday);
-                    console.log(energyConsumedYes);
-                    console.log(energyConsumedMon);
-                    console.log(energyConsumedYear);
-                    console.log(energyConsumedAve);
-                    drawDashboard("body");
+                    client.getData('solar_pv_power', { interval:'1h', from:'2d' }, function (err, data) { 
+	                    if (err) { 
+	                        return alert('Data Access Error'); 
+	                    } 
+	                    getProDayData(data)
 
-                    var interval = setInterval(function() {
-                        client.getData('energy_consumption', { interval:'1h' }, function (err, data) { 
-                            if (err) { 
-                                return alert('Data Access Error'); 
-                            }    
-                            getDayData(data);
+	                    client.getData('solar_pv_power', { from:'1mo', groupbyhour:'mean' }, function (err, data) { 
+				            if (err) { 
+				                return alert('Data Access Error'); 
+				            }    
+				            getProAveData(data, 'month');
 
-                            client.getData('energy_consumption', { from:'1mo', groupbyhour:'mean' }, function (err, data) { 
-                                if (err) { 
-                                    return alert('Data Access Error'); 
-                                }    
-                                getAveData(data, 'month');
+				            client.getData('solar_pv_power', { from:'1y', groupbyhour:'mean' }, function (err, data) { 
+				                if (err) { 
+				                    return alert('Data Access Error'); 
+				                }    
+				                getProAveData(data, 'year');
+				                
+				                client.getData('solar_pv_power', { groupbyhour:'mean' }, function (err, data) { 
+				                    if (err) { 
+				                        return alert('Data Access Error'); 
+				                    }    
+				                    getProAveData(data, 'all');
+	                    
 
-                                client.getData('energy_consumption', { from:'1y', groupbyhour:'mean' }, function (err, data) { 
-                                    if (err) { 
-                                        return alert('Data Access Error'); 
-                                    }    
-                                    getAveData(data, 'year');
-                                    
-                                    client.getData('energy_consumption', { groupbyhour:'mean' }, function (err, data) { 
-                                        if (err) { 
-                                            return alert('Data Access Error'); 
-                                        }    
-                                        getAveData(data, 'all');
-                                            
-                                        console.log(energyConsumedToday);
-                                        console.log(energyConsumedYes);
-                                        console.log(energyConsumedMon);
-                                        console.log(energyConsumedYear);
-                                        console.log(energyConsumedAve);
-                                        updateDashboard();  
-                                    });
-                                });
-                            });    
-                        });
-                    }, 100000);
+				                    console.log("consumed today: "+energyConsumedToday);
+				                    console.log("consumed yes: "+energyConsumedYes);
+				                    console.log("consumed month: "+energyConsumedMon);
+				                    console.log("consumed year: "+energyConsumedYear);
+				                    console.log("consumed ave: "+energyConsumedAve);
+				                    console.log("produced today: "+energyProducedToday);
+				                    console.log("produced yes: "+energyProducedYes);
+				                    console.log("produced month: "+energyProducedMon);
+				                    console.log("produced year: "+energyProducedYear);
+				                    console.log("produced ave: "+energyProducedAve);
+				                    drawDashboard("body");
 
+				                    var interval = setInterval(function() {
+				                        client.getData('energy_consumption', { interval:'1h' }, function (err, data) { 
+				                            if (err) { 
+				                                return alert('Data Access Error'); 
+				                            }    
+				                            getDayData(data);
+
+				                            client.getData('energy_consumption', { from:'1mo', groupbyhour:'mean' }, function (err, data) { 
+				                                if (err) { 
+				                                    return alert('Data Access Error'); 
+				                                }    
+				                                getAveData(data, 'month');
+
+				                                client.getData('energy_consumption', { from:'1y', groupbyhour:'mean' }, function (err, data) { 
+				                                    if (err) { 
+				                                        return alert('Data Access Error'); 
+				                                    }    
+				                                    getAveData(data, 'year');
+				                                    
+				                                    client.getData('energy_consumption', { groupbyhour:'mean' }, function (err, data) { 
+				                                        if (err) { 
+				                                            return alert('Data Access Error'); 
+				                                        }    
+				                                        getAveData(data, 'all');
+				                                            
+									                    console.log("consumed today: "+energyConsumedToday);
+									                    console.log("consumed yes: "+energyConsumedYes);
+									                    console.log("consumed month: "+energyConsumedMon);
+									                    console.log("consumed year: "+energyConsumedYear);
+									                    console.log("consumed ave: "+energyConsumedAve);
+									                    console.log("produced today: "+energyProducedToday);
+									                    console.log("produced yes: "+energyProducedYes);
+									                    console.log("produced month: "+energyProducedMon);
+									                    console.log("produced year: "+energyProducedYear);
+									                    console.log("produced ave: "+energyProducedAve);
+				                                        updateDashboard();  
+				                                    });
+				                                });
+				                            });    
+				                        });
+				                    }, 100000);
+								});
+							});
+						});
+					});
                 });
             });
         });   
@@ -149,6 +185,23 @@ function getDayData(data) {
 	}
 }
 
+function getProDayData(data) {
+	var n = data.length;
+	    console.log(data);
+	for(var i = 0; i < n; i++) {
+		var date = new Date(data[i].time);
+		var yesterday = new Date();
+		yesterday.setDate(yesterday.getDate() - 1);
+		var h = date.getHours();
+		if(date.getDate() == currentTime.getDate())
+			energyProducedToday[h] = data[i].value;
+		else if(date.getDate() == yesterday.getDate()){
+			energyProducedYes[h] = data[i].value;
+		}
+			
+	}
+}
+
 function getAveData(data, interval) {
     var n = data.length;
     for(var i = 0; i < n; i++) {
@@ -160,6 +213,21 @@ function getAveData(data, interval) {
         }
         if(interval == "all"){
             energyConsumedAve[i] = data[i].value;            
+        }
+    }
+}
+
+function getProAveData(data, interval) {
+    var n = data.length;
+    for(var i = 0; i < n; i++) {
+        if(interval == "month"){    
+            energyProducedMon[i] = data[i].value;        
+        }
+        if(interval == "year"){
+            energyProducedYear[i] = data[i].value;           
+        }
+        if(interval == "all"){
+            energyProducedAve[i] = data[i].value;            
         }
     }
 }
@@ -548,11 +616,11 @@ function drawEnergyLineChart(svg) {
     if (selectedEnergyTotal == 1) {
         //for(var i = 0; i < currentTime.getHours(); i++)  {
 		for(var i = 0; i < 24; i++)  {
-            data.push(energyProducedToday[i]+energyConsumedToday[i]);
-            data1.push(energyProducedAve[i]+energyConsumedAve[i]);
-            data2.push(energyProducedYes[i]+energyConsumedYes[i]);
-            data3.push(energyProducedMon[i]+energyConsumedMon[i]);
-            data4.push(energyProducedYear[i]+energyConsumedYear[i]);
+            data.push(energyProducedToday[i]-energyConsumedToday[i]);
+            data1.push(energyProducedAve[i]-energyConsumedAve[i]);
+            data2.push(energyProducedYes[i]-energyConsumedYes[i]);
+            data3.push(energyProducedMon[i]-energyConsumedMon[i]);
+            data4.push(energyProducedYear[i]-energyConsumedYear[i]);
         }
     }
     else if (selectedEnergyCon == 1) {
@@ -567,7 +635,7 @@ function drawEnergyLineChart(svg) {
         data1 = energyProducedAve;
         data2 = energyProducedYes;
         data3 = energyProducedMon;
-        data4 = energyProducedYear ;
+        data4 = energyProducedYear;
     }
 
     var max = findMax(data, data1, data2, data3, data4);  
